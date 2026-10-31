@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبارات AL BANA - السنة الثانية</title>
+    <!-- استدعاء مكتبة فايربيس للنسخ الويب للتحقق السحابي المباشر -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0b0f19; color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        /* بوابة الرمز السري الأولية */
+        #secret-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0f19; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; padding: 20px; }
+        .secret-box { background: rgba(17, 24, 39, 0.98); padding: 35px; border-radius: 16px; border: 2px solid #ef4444; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .secret-box h2 { color: #ef4444; margin-bottom: 10px; font-size: 1.6rem; }
+        .secret-box p { color: #9ca3af; font-size: 0.95rem; margin-bottom: 20px; line-height: 1.5; }
+        .secret-box input { width: 100%; padding: 12px; margin-bottom: 15px; background: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: #fff; text-align: center; font-size: 1.1rem; }
+        .secret-box button { background: #ef4444; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1.1rem; }
+
+        #intro-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: #ffffff; transition: opacity 0.8s ease; }
+        .goat-title { font-size: 5rem; font-weight: bold; letter-spacing: 12px; display: flex; gap: 15px; direction: ltr; margin-bottom: 20px; }
+        .goat-title span { opacity: 0; transform: translateY(-80px); animation: dropLetter 0.5s forwards; }
+        .goat-title span:nth-child(1) { animation-delay: 0.2s; }
+        .goat-title span:nth-child(2) { animation-delay: 0.4s; }
+        .goat-title span:nth-child(3) { animation-delay: 0.6s; }
+        .goat-title span:nth-child(4) { animation-delay: 0.8s; }
+        @keyframes dropLetter { to { opacity: 1; transform: translateY(0); } }
+        .blood-countdown { font-size: 4rem; color: #ef4444; font-weight: bold; }
+
+        /* بوابة تفعيل الاشتراك الشهري المحدثة بالاسم والألوان والتنسيق الأصلي تماماً */
+        #activation-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0f19; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9995; padding: 20px; overflow-y: auto; }
+        .activation-box { background: rgba(17, 24, 39, 0.98); padding: 30px; border-radius: 16px; border: 2px solid #3b82f6; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin: auto; }
+        .activation-box h2 { color: #60a5fa; margin-bottom: 8px; font-size: 1.5rem; }
+        .activation-box .sub-welcome { color: #9ca3af; font-size: 0.9rem; margin-bottom: 15px; font-style: italic; }
+        .price-badge { background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #10b981; padding: 8px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 1.1rem; }
+        .activation-box p { color: #d1d5db; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5; }
+        
+        .sham-cash-box { background: #1f2937; border: 1px dashed #4b5563; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.95rem; color: #f59e0b; }
+        .sham-img-preview { width: 100%; max-height: 150px; object-fit: contain; border-radius: 8px; margin-top: 8px; display: none; background: #fff; padding: 5px; }
+
+        .activation-box input { width: 100%; padding: 12px; margin-bottom: 15px; background: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: #fff; text-align: center; font-size: 1rem; }
+        .activation-box button { background: #10b981; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1.1rem; margin-bottom: 10px; }
+        .telegram-btn { display: block; background: #2563eb; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 15px; font-size: 0.95rem; }
+
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0b0f19, #1f2937); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9980; padding: 20px; }
+        .login-box { background: rgba(17, 24, 39, 0.95); padding: 40px; border-radius: 16px; border: 1px solid #374151; box-shadow: 0 15px 35px rgba(0,0,0,0.6); width: 100%; max-width: 450px; text-align: center; }
+        .login-box h2 { color: #60a5fa; margin-bottom: 25px; font-size: 1.8rem; }
+        .login-box input, .login-box select { width: 100%; padding: 14px; margin: 12px 0; background: #1f2937; border: 1px solid #4b5563; border-radius: 10px; color: #fff; font-size: 1.1rem; text-align: center; }
+        .login-box button { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+
+        .main-container { display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px; }
+        .dashboard-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 14px; }
+        .dashboard-box { padding: 18px; border-radius: 14px; text-align: center; font-size: 1.15rem; font-weight: bold; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .box-1 { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .box-2 { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+        .box-3 { background: linear-gradient(135deg, #ec4899, #be185d); color: white; }
+        .box-4 { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .box-5 { background: linear-gradient(135deg, #eab308, #ca8a04); color: white; }
+        .box-6 { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; }
+        .box-7 { background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; }
+        .dashboard-box:hover { transform: scale(1.02); }
+
+        .dynamic-screen { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin: auto; padding: 20px; flex: 1; }
+        .sub-box { background: #1f2937; border: 1px solid #374151; padding: 18px; margin: 10px 0; border-radius: 10px; width: 100%; text-align: center; font-size: 1.1rem; cursor: pointer; transition: background 0.3s; color: #fff; font-weight: bold; }
+        .sub-box:hover { background: #3f4656; }
+        
+        .nav-buttons-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { background: #4b5563; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
+        .home-btn { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
+
+        .search-box { width: 100%; padding: 12px; margin-bottom: 15px; background: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: #fff; font-size: 1rem; }
+        .question-card { background: #111827; border: 1px solid #374151; padding: 15px; border-radius: 10px; margin-bottom: 15px; width: 100%; position: relative; }
+        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; color: #60a5fa; }
+        .action-btns { display: flex; gap: 8px; align-items: center; }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+        .answer-box { background: #1f2937; padding: 10px; border-radius: 6px; margin-top: 8px; color: #e5e7eb; display: none; white-space: pre-line; }
+        .show-ans-btn { background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-top: 8px; font-size: 0.9rem; }
+        
+        .exam-input { width: 100%; padding: 12px; background: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: #ffffff !important; font-size: 1.05rem; margin-top: 8px; outline: none; }
+        .exam-input::placeholder { color: #9ca3af; }
+
+        .mcq-options { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+        .mcq-option { background: #1f2937; border: 1px solid #4b5563; padding: 12px; border-radius: 8px; cursor: pointer; color: #fff; text-align: right; transition: background 0.2s; font-size: 1rem; }
+        .mcq-option:hover { background: #374151; }
+        .mcq-option.correct { background: #059669 !important; border-color: #10b981 !important; color: #fff !important; }
+        .mcq-option.wrong { background: #dc2626 !important; border-color: #ef4444 !important; color: #fff !important; }
+
+        .timer-badge { background: #ef4444; color: white; padding: 8px 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px; text-align: center; width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .stop-timer-btn { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: background 0.2s; }
+        .stop-timer-btn:hover { background: #b91c1c; }
+        
+        .report-card { background: #1f2937; border: 2px solid #374151; padding: 25px; border-radius: 12px; margin-bottom: 25px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .report-card h3 { color: #f59e0b; font-size: 1.5rem; margin-bottom: 15px; }
+        .report-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: #111827; padding: 12px; border-radius: 8px; border: 1px solid #374151; }
+        .stat-box span { display: block; font-size: 0.85rem; color: #9ca3af; margin-bottom: 5px; }
+        .stat-box strong { font-size: 1.3rem; color: #fff; }
+
+        .marquee-bar { background: #1f2937; color: #f59e0b; padding: 10px; font-size: 0.95rem; font-weight: bold; border-bottom: 1px solid #374151; white-space: nowrap; overflow: hidden; }
+        footer { background: #030712; padding: 20px; text-align: center; border-top: 1px solid #1f2937; font-size: 0.85rem; color: #9ca3af; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+    <!-- بوابة الرمز السري المطلوبة -->
+    <div id="secret-gate">
+        <div class="secret-box">
+            <h2>🔐 حماية تطبيق AL BANA - السنة الثانية</h2>
+            <p>أدخل الرمز السري الخاص لفتح التطبيق والوصول إلى بنك الأسئلة 🖤🔥</p>
+            <input type="password" id="userSecretInput" placeholder="أدخل الرمز السري هنا...">
+            <button onclick="verifySecretCode()">دخول آمن 🚀</button>
+        </div>
+    </div>
+
+    <!-- بوابة تفعيل الاشتراك الشهري -->
+    <div id="activation-gate" style="display: none;">
+        <div class="activation-box">
+            <h2>أهلاً وسهلاً بك في منصة AL BANA التعليمية (السنة الثانية) ❤️🌹</h2>
+            <div class="sub-welcome">Welcome to AL BANA Educational Platform ❤️🌹</div>
+            
+            <div class="price-badge">💳 رسم الاشتراك: 300 ليرة سورية (لمدة شهر كامل)</div>
+            
+            <div class="sham-cash-box">
+                <div>حساب شام كاش للتحويل:</div>
+                <strong style="color: #fff; font-size: 1.1rem;">أحمد علي عمران</strong>
+                <div style="margin-top: 5px; font-size: 0.85rem; color: #9ca3af;">رقم الحساب: اضغط زر الواتساب لإرسال الإيصال</div>
+                <img id="shamCashImg" src="" alt="حساب شام كاش" class="sham-img-preview">
+            </div>
+
+            <a href="https://wa.me/963983957561?text=مرحباً مهندس، هذا إيصال تحويل شام كاش لاشتراك منصة AL BANA (السنة الثانية) 🖤🌹" target="_blank" class="telegram-btn" style="background: #25d366;">
+                💬 إرسال الإيصال عبر الواتساب وطلب الكود
+            </a>
+
+            <p>ارجو إدخال كود التفعيل الخاص بك أدناه ❤️🌹</p>
+            <input type="text" id="userActivationCode" placeholder="أدخل كود التفعيل (مثال: BANA-XXXXXXXX)...">
+            <button onclick="verifyCodeWithDatabase()">تفعيل المنصة والدخول 🚀</button>
+            <div id="activationMessage" style="margin-top: 10px; font-weight: bold; font-size: 0.95rem;"></div>
+        </div>
+    </div>
+
+    <div class="marquee-bar">
+        <marquee scrollamount="5">🔥⏳ تم إطلاق منصة السنة الثانية رسمياً مع بنك الأسئلة الشامل 🔥___ كل التوفيق لطلاب السنة الثانية في اختبارات AL BANA 🤩🔥</marquee>
+    </div>
+
+    <div id="intro-screen">
+        <div class="goat-title">
+            <span>G</span>
+            <span>O</span>
+            <span>A</span>
+            <span>T</span>
+        </div>
+        <div class="blood-countdown" id="countdownNum">7</div>
+    </div>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>مرحباً بك يا GOAT 🐐</h2>
+            <input type="text" id="fullName" placeholder="أدخل اسمك الثلاثي">
+            <select id="academicYear">
+                <option value="">حدد سنتك الدراسية</option>
+                <option value="السنة الثانية" selected>السنة الثانية</option>
+            </select>
+            <button onclick="startPlatform()">دخول المنصة</button>
+        </div>
+    </div>
+
+    <div class="main-container" id="mainDashboard">
+        <div class="dashboard-container">
+            <div class="dashboard-box box-1" onclick="showScreen('sectionsScreen')">اختبارات AL BANA (السنة الثانية)</div>
+            <div class="dashboard-box box-2" onclick="startOracleMenu()">🏛️ هيكل الأوراكل (40 سؤالاً خارقاً)</div>
+            <div class="dashboard-box box-3" onclick="startExamSimulatorMenu()">🎯 محاكي الامتحان (اختبر جاهزيتك)</div>
+            <div class="dashboard-box" style="background: linear-gradient(135deg, #06b6d4, #0e7490); color: white;" onclick="startQuantumSimulationMenu()">🌌 غرفة المحاكاة الكمية (التحليل الذكي للجلسات)</div>
+            <div class="dashboard-box box-5" onclick="showFavoritesScreen()">🌟 الأسئلة المفضلة والمحظوظة</div>
+            <div class="dashboard-box box-6" onclick="showWeaknessesScreen()">🎯 صيد الثغرات والأخطاء (مراجعة الأخطاء تلقائياً)</div>
+            <div class="dashboard-box box-7" onclick="showNotesScreen()">📝 مذكرة ملاحظات المهندس (تدوين أفكارك وقوانينك)</div>
+            <div class="dashboard-box box-4" onclick="alert('رقم المصمم: 0983957561 🖤🌹')">اترك لنا ملاحظاتك 🖤🌹</div>
+        </div>
+    </div>
+
+    <div class="dynamic-screen" id="sectionsScreen">
+        <div class="nav-buttons-bar">
+            <button class="back-btn" onclick="showScreen('mainDashboard')">الرجوع للخلف</button>
+            <button class="home-btn" onclick="showScreen('mainDashboard')">🏠 القائمة الرئيسية</button>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 15px;">
+            <div class="sub-box" onclick="showSubjects('practical')">القسم العملي</div>
+            <div class="sub-box" onclick="showSubjects('theoretical')">القسم النظري</div>
+        </div>
+    </div>
+
+    <div class="dynamic-screen" id="subjectsScreen">
+        <div class="nav-buttons-bar">
+            <button class="back-btn" onclick="handleSubjectsBack()">الرجوع للخلف</button>
+            <button class="home-btn" onclick="showScreen('mainDashboard')">🏠 القائمة الرئيسية</button>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;" id="subjectsList"></div>
+    </div>
+
+    <!-- شاشة خاصة بالخيارات الفرعية للمادة رقم 2 (مساحة ومنشآت زراعية) -->
+    <div class="dynamic-screen" id="surveySubOptionsScreen">
+        <div class="nav-buttons-bar">
+            <button class="back-btn" onclick="showSubjects(currentMode)">الرجوع للمواد</button>
+            <button class="home-btn" onclick="showScreen('mainDashboard')">🏠 القائمة الرئيسية</button>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 15px;">
+            <h3 style="color:#60a5fa; margin-bottom:10px; text-align:center;">اختر القسم المطلوب</h3>
+            <div class="sub-box" onclick="loadSurveySubBranch('المساحة')">📐 المساحة</div>
+            <div class="sub-box" onclick="loadSurveySubBranch('المنشآت الزراعية')">🏗️ المنشآت الزراعية</div>
+        </div>
+    </div>
+
+    <div class="dynamic-screen" id="sessionsScreen">
+        <div class="nav-buttons-bar">
+            <button class="back-btn" onclick="handleSessionsBack()">الرجوع للمواد</button>
+            <button class="home-btn" onclick="showScreen('mainDashboard')">🏠 القائمة الرئيسية</button>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;" id="sessionsList"></div>
+    </div>
+
+    <div class="dynamic-screen" id="quizScreen">
+        <div class="nav-buttons-bar">
+            <button class="back-btn" onclick="handleQuizBack()">الرجوع للخلف</button>
+            <button class="home-btn" onclick="showScreen('mainDashboard')">🏠 القائمة الرئيسية</button>
+        </div>
+        <h3 id="quizTitle" style="color:#60a5fa; margin-bottom:15px; text-align:center;"></h3>
+        <div id="examTimerContainer"></div>
+        <div id="gamificationContainer"></div>
+        <input type="text" id="searchBar" class="search-box" placeholder="🔍 بحث سريع عن سؤال أو كلمة مفتاحية..." onkeyup="filterQuestions()">
+        <div id="questionsContainer" style="width: 100%;"></div>
+        <button id="submitExamBtn" class="sub-box" style="background:#10b981; display:none; margin-top:20px;" onclick="submitExam()">إنهاء الامتحان وإظهار الأجوبة الصحيحة 📝</button>
+    </div>
+
+    <div class="dynamic-screen" id="favoritesScreen">
+        <div class="nav-buttons-bar">
+            <button class="back-btn" onclick="showScreen('mainDashboard')">الرجوع للرئيسية</button>
+            <button class="home-btn" onclick="showScreen('mainDashboard')">🏠 القائمة الرئيسية</button>
+        </div>
+        <h3 style="color:#eab308; margin-bottom:15px; text-align:center;" id="favoritesTitle">🌟 الأسئلة المفضلة والمحفوظة ليلة الامتحان</h3>
+        <div id="favoritesContainer" style="width: 100%;"></div>
+    </div>
+
+    <footer>
+        صمم من قبل المهندس أحمد علي عمران / المهندس محمد كامل محمد جميع الحقوق محفوظه© 2026
+    </footer>
+
+    <!-- ربط ملفات بنك الأسئلة الخاصة بمواد السنة الثانية -->
+    <script src="genetics.js?v=1.0"></script>
+    <script src="survey_structures.js?v=1.0"></script>
+    <script src="insects.js?v=1.0"></script>
+    <script src="biochemistry.js?v=1.0"></script>
+    <script src="geology.js?v=1.0"></script>
+    <script src="agricultural_statistics.js?v=1.0"></script>
+
+    <script>
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && (e.key === 'u' || e.key === 'c' || e.key === 's' || e.key === 'i'))) {
+                e.preventDefault();
+            }
+        });
+
+        const firebaseConfig = { projectId: "al-bana" };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.firestore();
+
+        function verifySecretCode() {
+            const secretVal = document.getElementById('userSecretInput').value.trim();
+            if (secretVal === "hj55y5s") {
+                document.getElementById('secret-gate').style.display = 'none';
+                localStorage.setItem('albana_2nd_secret_unlocked', 'true');
+            } else {
+                alert('الرمز السري غير صحيح! ❌');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('albana_2nd_secret_unlocked') === 'true') {
+                document.getElementById('secret-gate').style.display = 'none';
+            }
+
+            const activationTimestamp = localStorage.getItem('albana_2nd_activation_time');
+            const oneMonthInMillis = 30 * 24 * 60 * 60 * 1000;
+            const currentTime = new Date().getTime();
+
+            if (activationTimestamp) {
+                if (currentTime - parseInt(activationTimestamp) < oneMonthInMillis) {
+                    document.getElementById('activation-gate').style.display = 'none';
+                } else {
+                    localStorage.removeItem('albana_2nd_activation_time');
+                    localStorage.removeItem('albana_2nd_platform_unlocked');
+                    document.getElementById('activation-gate').style.display = 'flex';
+                }
+            } else {
+                document.getElementById('activation-gate').style.display = 'flex';
+            }
+        });
+
+        async function verifyCodeWithDatabase() {
+            const inputVal = document.getElementById('userActivationCode').value.trim();
+            const msgDiv = document.getElementById('activationMessage');
+
+            if(!inputVal) {
+                msgDiv.style.color = "red";
+                msgDiv.innerText = "⚠️ الرجاء إدخال كود التفعيل أولاً!";
+                return;
+            }
+
+            msgDiv.style.color = "#9ca3af";
+            msgDiv.innerText = "⏳ جاري التحقق من الكود سحابياً...";
+
+            try {
+                const docRef = db.collection('activation_codes').doc(inputVal);
+                const doc = await docRef.get();
+
+                if (!doc.exists) {
+                    msgDiv.style.color = "red";
+                    msgDiv.innerText = "❌ الكود غير صحيح أو غير موجود!";
+                    return;
+                }
+
+                const data = doc.data();
+                if (data.is_used) {
+                    msgDiv.style.color = "orange";
+                    msgDiv.innerText = "⚠️ هذا الكود مستخدم مسبقاً!";
+                    return;
+                }
+
+                await docRef.update({ is_used: true, used_at: new Date().toISOString() });
+
+                localStorage.setItem('albana_2nd_activation_time', new Date().getTime().toString());
+                localStorage.setItem('albana_2nd_platform_unlocked', 'true');
+
+                msgDiv.style.color = "green";
+                msgDiv.innerText = "🎉 تم تفعيل اشتراكك بنجاح يا GOAT!";
+
+                setTimeout(() => {
+                    document.getElementById('activation-gate').style.display = 'none';
+                    const savedName = localStorage.getItem('albana_2nd_user_name');
+                    if (savedName) {
+                        document.getElementById('mainDashboard').style.display = 'flex';
+                    } else {
+                        document.getElementById('login-screen').style.display = 'flex';
+                    }
+                }, 1000);
+
+            } catch (error) {
+                msgDiv.style.color = "red";
+                msgDiv.innerText = "❌ حدث خطأ في الاتصال، حاول مرة أخرى.";
+                console.error(error);
+            }
+        }
+
+        let timeLeft = 7;
+        const countdownEl = document.getElementById('countdownNum');
+        const timer = setInterval(() => {
+            timeLeft--;
+            countdownEl.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                document.getElementById('intro-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('intro-screen').style.display = 'none';
+                    if (localStorage.getItem('albana_2nd_platform_unlocked') === 'true') {
+                        const savedName = localStorage.getItem('albana_2nd_user_name');
+                        if (savedName) {
+                            document.getElementById('mainDashboard').style.display = 'flex';
+                        } else {
+                            document.getElementById('login-screen').style.display = 'flex';
+                        }
+                    }
+                }, 800);
+            }
+        }, 1000);
+
+        function startPlatform() {
+            const name = document.getElementById('fullName').value.trim();
+            const year = document.getElementById('academicYear').value;
+            if(!name) {
+                alert('يرجى إدخال الاسم الثلاثي يا GOAT!');
+                return;
+            }
+            localStorage.setItem('albana_2nd_user_name', name);
+            localStorage.setItem('albana_2nd_user_year', year);
+
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('mainDashboard').style.display = 'flex';
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('mainDashboard').style.display = 'none';
+            document.getElementById('sectionsScreen').style.display = 'none';
+            document.getElementById('subjectsScreen').style.display = 'none';
+            document.getElementById('surveySubOptionsScreen').style.display = 'none';
+            document.getElementById('sessionsScreen').style.display = 'none';
+            document.getElementById('quizScreen').style.display = 'none';
+            document.getElementById('favoritesScreen').style.display = 'none';
+            document.getElementById(screenId).style.display = 'flex';
+        }
+
+        // مواد السنة الثانية المطلوبة
+        const subjects = [
+            "وراثة", 
+            "مساحة ومنشآت زراعية", 
+            "حشرات", 
+            "كيمياء حيوية", 
+            "جيولوجيا", 
+            "إحصاء زراعي"
+        ];
+
+        let currentMode = '';
+        let currentSubject = '';
+        let currentSubBranch = '';
+        let appMode = 'normal';
+        let examInterval = null;
+        
+        let favoriteQuestions = JSON.parse(localStorage.getItem('albana_2nd_favorites')) || [];
+        let weaknessQuestions = JSON.parse(localStorage.getItem('albana_2nd_weaknesses')) || [];
+
+        function addWeakness(q, a) {
+            let exists = weaknessQuestions.some(item => item.q === q);
+            if (!exists) {
+                weaknessQuestions.push({ q: q, a: a });
+                localStorage.setItem('albana_2nd_weaknesses', JSON.stringify(weaknessQuestions));
+            }
+        }
+
+        function speakText(text, btnElement) { return; }
+        function refreshGamificationUI() {
+            const panel = document.getElementById('gamificationContainer');
+            if (panel) panel.innerHTML = '';
+        }
+
+        function showSubjects(mode) {
+            currentMode = mode;
+            appMode = 'normal';
+            showScreen('subjectsScreen');
+            const container = document.getElementById('subjectsList');
+            container.innerHTML = '<h3 style="color:#60a5fa; margin-bottom:15px; text-align:center;">اختر المادة الدراسية (السنة الثانية)</h3>';
+            
+            subjects.forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'sub-box';
+                div.innerText = sub;
+                div.onclick = () => handleSubjectClick(sub, mode);
+                container.appendChild(div);
+            });
+        }
+
+        function handleSubjectClick(subName, mode) {
+            currentSubject = subName;
+            if(subName === "مساحة ومنشآت زراعية") {
+                showScreen('surveySubOptionsScreen');
+            } else {
+                showSessions(subName, mode);
+            }
+        }
+
+        function loadSurveySubBranch(branchName) {
+            currentSubBranch = branchName;
+            showSessions("مساحة ومنشآت زراعية - " + branchName, currentMode);
+        }
+
+        function handleSubjectsBack() {
+            if (appMode === 'oracle') {
+                startOracleMenu();
+            } else if (appMode === 'examSimulator') {
+                startExamSimulatorMenu();
+            } else if (appMode === 'quantum') {
+                startQuantumSimulationMenu();
+            } else {
+                showScreen('sectionsScreen');
+            }
+        }
+
+        function handleSessionsBack() {
+            if (currentSubject.startsWith("مساحة ومنشآت زراعية")) {
+                showScreen('surveySubOptionsScreen');
+                return;
+            }
+            if (appMode === 'oracle') {
+                startOracleMenu();
+            } else if (appMode === 'examSimulator') {
+                startExamSimulatorMenu();
+            } else if (appMode === 'quantum') {
+                startQuantumSimulationMenu();
+            } else {
+                showSubjects(currentMode);
+            }
+        }
+
+        function handleQuizBack() {
+            if (appMode === 'oracle' || appMode === 'quantum' || appMode === 'examSimulator') {
+                showSessions(currentSubject, 'practical');
+            } else {
+                showSessions(currentSubject, currentMode);
+            }
+        }
+
+        function showSessions(subjectName, mode) {
+            currentSubject = subjectName;
+            if(mode === 'theoretical') {
+                alert('لم يحن الوقت للبدء بالمواد النظرية 🖤🌹');
+                return;
+            }
+
+            if (appMode === 'oracle') {
+                showScreen('sessionsScreen');
+                const container = document.getElementById('sessionsList');
+                container.innerHTML = `<h3 style="color:#a855f7; margin-bottom:15px; text-align:center;">🏛️ هيكل الأوراكل: ${subjectName}</h3>`;
+
+                for(let i = 1; i <= 7; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'sub-box';
+                    div.innerText = `الجلسة العملية ${getArabicNumber(i)} (40 سؤال اختياري)`;
+                    div.onclick = () => runOracleSession(subjectName, i);
+                    container.appendChild(div);
+                }
+                return;
+            }
+
+            if (appMode === 'quantum') {
+                showScreen('sessionsScreen');
+                const container = document.getElementById('sessionsList');
+                container.innerHTML = `<h3 style="color:#22d3ee; margin-bottom:15px; text-align:center;">🌌 غرفة المحاكاة الكمية: ${subjectName}</h3>`;
+
+                const simDiv = document.createElement('div');
+                simDiv.className = 'sub-box';
+                simDiv.style.background = '#0891b2';
+                simDiv.innerText = `🌌 بدء المحاكاة الكمية الذكية (${subjectName} - 25 سؤال)`;
+                simDiv.onclick = () => runQuantumSimulation(subjectName);
+                container.appendChild(simDiv);
+                return;
+            }
+
+            showScreen('sessionsScreen');
+            const container = document.getElementById('sessionsList');
+            container.innerHTML = `<h3 style="color:#60a5fa; margin-bottom:15px; text-align:center;">${subjectName} (القسم العملي)</h3>`;
+
+            for(let i = 1; i <= 7; i++) {
+                const div = document.createElement('div');
+                div.className = 'sub-box';
+                div.innerText = `الجلسة العملية ${getArabicNumber(i)}: ${subjectName}`;
+                div.onclick = () => loadQuiz(subjectName, i);
+                container.appendChild(div);
+            }
+
+            const finalDiv = document.createElement('div');
+            finalDiv.className = 'sub-box';
+            finalDiv.style.background = '#3b82f6';
+            finalDiv.innerText = `اختبار لجميع الجلسات السابقة (${subjectName} - امتحان شامل)`;
+            finalDiv.onclick = () => loadComprehensiveExam(subjectName);
+            container.appendChild(finalDiv);
+        }
+
+        function getArabicNumber(num) {
+            const arr = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", "السابعة"];
+            return arr[num-1];
+        }
+
+        let activeQuestions = [];
+
+        function getDatabaseObject(subject) {
+            if(subject.includes("وراثة") && typeof geneticsData !== 'undefined') return geneticsData;
+            if(subject.includes("مساحة ومنشآت زراعية") && typeof surveyStructuresData !== 'undefined') return surveyStructuresData;
+            if(subject.includes("حشرات") && typeof insectsData !== 'undefined') return insectsData;
+            if(subject.includes("كيمياء حيوية") && typeof biochemistryData !== 'undefined') return biochemistryData;
+            if(subject.includes("جيولوجيا") && typeof geologyData !== 'undefined') return geologyData;
+            if(subject.includes("إحصاء زراعي") && typeof agriculturalStatisticsData !== 'undefined') return agriculturalStatisticsData;
+            return null;
+        }
+
+        function loadQuiz(subject, sessionNum) {
+            appMode = 'normal';
+            refreshGamificationUI();
+            showScreen('quizScreen');
+            document.getElementById('examTimerContainer').innerHTML = '';
+            document.getElementById('submitExamBtn').style.display = 'none';
+            
+            let dbObj = getDatabaseObject(subject);
+            if(dbObj && dbObj.sessions) {
+                if(subject.includes("مساحة ومنشآت زراعية")) {
+                    let branchKey = currentSubBranch === "المساحة" ? "survey" : "structures";
+                    activeQuestions = dbObj[branchKey] && dbObj[branchKey][sessionNum] ? dbObj[branchKey][sessionNum] : [];
+                } else {
+                    activeQuestions = dbObj.sessions[sessionNum] || [];
+                }
+            } else {
+                activeQuestions = [{ q: "قريباً سيتم توفير أسئلة هذه المادة", a: "ترقبوا التحديث القادم!" }];
+            }
+            renderQuestions(activeQuestions, `الجلسة العملية ${getArabicNumber(sessionNum)} (${subject})`, false);
+        }
+
+        function loadComprehensiveExam(subject) {
+            appMode = 'normal';
+            refreshGamificationUI();
+            showScreen('quizScreen');
+            document.getElementById('examTimerContainer').innerHTML = '';
+            document.getElementById('submitExamBtn').style.display = 'none';
+
+            let dbObj = getDatabaseObject(subject);
+            let allQ = [];
+            if(dbObj) {
+                if(subject.includes("مساحة ومنشآت زراعية")) {
+                    let branchKey = currentSubBranch === "المساحة" ? "survey" : "structures";
+                    if(dbObj[branchKey]) {
+                        Object.values(dbObj[branchKey]).forEach(arr => { allQ = allQ.concat(arr); });
+                    }
+                } else if(dbObj.sessions) {
+                    Object.values(dbObj.sessions).forEach(arr => { allQ = allQ.concat(arr); });
+                }
+            }
+            activeQuestions = allQ;
+            renderQuestions(activeQuestions, `الاختبار الشامل العشوائي (${subject})`, false);
+        }
+
+        function startOracleMenu() {
+            appMode = 'oracle';
+            showScreen('subjectsScreen');
+            const container = document.getElementById('subjectsList');
+            container.innerHTML = '<h3 style="color:#a855f7; margin-bottom:15px; text-align:center;">🏛️ اختر مادة هيكل الأوراكل (السنة الثانية)</h3>';
+            
+            subjects.forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'sub-box';
+                div.innerText = sub;
+                div.onclick = () => handleSubjectClick(sub, 'practical');
+                container.appendChild(div);
+            });
+        }
+
+        function runOracleSession(subjectName, sessionNum) {
+            let dbObj = getDatabaseObject(subjectName);
+            let sessionQuestions = [];
+            if(dbObj) {
+                if(subjectName.includes("مساحة ومنشآت زراعية")) {
+                    let branchKey = currentSubBranch === "المساحة" ? "survey" : "structures";
+                    sessionQuestions = dbObj[branchKey] && dbObj[branchKey][sessionNum] ? dbObj[branchKey][sessionNum] : [];
+                } else if(dbObj.sessions) {
+                    sessionQuestions = dbObj.sessions[sessionNum] || [];
+                }
+            }
+            setupOracleQuiz(sessionQuestions, `🏛️ هيكل الأوراكل: (${subjectName} - الجلسة ${getArabicNumber(sessionNum)}) - 40 سؤال`);
+        }
+
+        function setupOracleQuiz(sourceArray, titleText) {
+            if(sourceArray.length === 0) {
+                alert('لا توجد أسئلة كافية متاحة حالياً!');
+                return;
+            }
+            refreshGamificationUI();
+            let selected40 = [...sourceArray].sort(() => 0.5 - Math.random()).slice(0, 40);
+            let allAnswersPool = sourceArray.map(item => item.a);
+
+            activeQuestions = selected40.map(item => {
+                let correctAnswer = item.a;
+                let wrongOptions = allAnswersPool.filter(ans => ans !== correctAnswer).sort(() => 0.5 - Math.random()).slice(0, 3);
+                let options = [...wrongOptions, correctAnswer].sort(() => 0.5 - Math.random());
+                return { q: item.q, correct: correctAnswer, options: options };
+            });
+
+            showScreen('quizScreen');
+            renderOracleQuestions(activeQuestions, titleText);
+            startOracleTimer(45 * 60);
+        }
+
+        function startOracleTimer(durationInSeconds) {
+            if(examInterval) clearInterval(examInterval);
+            let timerContainer = document.getElementById('examTimerContainer');
+            let timeLeftSec = durationInSeconds;
+
+            examInterval = setInterval(() => {
+                let minutes = Math.floor(timeLeftSec / 60);
+                let seconds = timeLeftSec % 60;
+                timerContainer.innerHTML = `
+                    <div class="timer-badge" style="background:#a855f7;">
+                        <span>🏛️ الوقت المتبقي: ${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}</span>
+                        <button class="stop-timer-btn" onclick="stopExamTimer('oracle')">إنهاء الوقت ⏹️</button>
+                    </div>
+                `;
+                if(timeLeftSec <= 0) { clearInterval(examInterval); stopExamTimer('oracle'); }
+                timeLeftSec--;
+            }, 1000);
+        }
+
+        function renderOracleQuestions(questions, titleText) {
+            document.getElementById('quizTitle').innerText = titleText;
+            document.getElementById('submitExamBtn').style.display = 'none';
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.setAttribute('data-q', item.q);
+                card.setAttribute('data-a', item.correct);
+                
+                let optionsHtml = '';
+                item.options.forEach(opt => {
+                    optionsHtml += `<div class="mcq-option" onclick="checkOracleAnswer(this, '${encodeURIComponent(opt)}', '${encodeURIComponent(item.correct)}')">${opt}</div>`;
+                });
+
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span>🏛️ السؤال ${index + 1} 🏛️</span>
+                        <div class="action-btns"><button class="icon-btn" onclick="speakText('', this)" title="قراءة السؤال صوتياً">🔊</button></div>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">${item.q}</p>
+                    <div class="mcq-options">${optionsHtml}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function checkOracleAnswer(element, selectedEncoded, correctEncoded) {
+            let selectedCard = element;
+            let parentContainer = selectedCard.parentElement.closest('.question-card');
+            let allOptions = parentContainer.querySelectorAll('.mcq-option');
+
+            if(parentContainer.classList.contains('answered')) return;
+            parentContainer.classList.add('answered');
+
+            let selected = decodeURIComponent(selectedEncoded);
+            let correct = decodeURIComponent(correctEncoded);
+
+            if(selected === correct) {
+                selectedCard.classList.add('correct');
+                selectedCard.setAttribute('data-status', 'correct');
+            } else {
+                selectedCard.classList.add('wrong');
+                selectedCard.setAttribute('data-status', 'wrong');
+                let qText = parentContainer.getAttribute('data-q');
+                addWeakness(qText, correct);
+                allOptions.forEach(opt => {
+                    if(opt.innerText.trim() === correct.trim()) { opt.classList.add('correct'); }
+                });
+            }
+        }
+
+        function startExamSimulatorMenu() {
+            appMode = 'examSimulator';
+            showScreen('subjectsScreen');
+            const container = document.getElementById('subjectsList');
+            container.innerHTML = '<h3 style="color:#ef4444; margin-bottom:15px; text-align:center;">🎯 اختر مادة محاكي الامتحان (السنة الثانية)</h3>';
+            
+            subjects.forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'sub-box';
+                div.innerText = sub;
+                div.onclick = () => runExamSimulator(sub);
+                container.appendChild(div);
+            });
+        }
+
+        function runExamSimulator(subjectName) {
+            let allSubQuestions = getAllSubjectQuestions(subjectName);
+            if(allSubQuestions.length === 0) {
+                alert('لا توجد أسئلة كافية لهذه المادة حالياً!');
+                return;
+            }
+            appMode = 'examSimulator';
+            refreshGamificationUI();
+            activeQuestions = [...allSubQuestions].sort(() => 0.5 - Math.random()).slice(0, 30);
+            showScreen('quizScreen');
+            renderExamModeQuestions(activeQuestions, `🎯 محاكي الامتحان: (${subjectName}) - 30 سؤال`);
+            startExamTimer(45 * 60);
+        }
+
+        function startQuantumSimulationMenu() {
+            appMode = 'quantum';
+            showScreen('subjectsScreen');
+            const container = document.getElementById('subjectsList');
+            container.innerHTML = '<h3 style="color:#22d3ee; margin-bottom:15px; text-align:center;">🌌 اختر مادة غرفة المحاكاة الكمية (السنة الثانية)</h3>';
+            
+            subjects.forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'sub-box';
+                div.innerText = sub;
+                div.onclick = () => runQuantumSimulation(sub);
+                container.appendChild(div);
+            });
+        }
+
+        function runQuantumSimulation(subjectName) {
+            let allSubQuestions = getAllSubjectQuestions(subjectName);
+            if(allSubQuestions.length === 0) {
+                alert('لا توجد أسئلة كافية مستمدة من الجلسات لهذه المادة حالياً!');
+                return;
+            }
+            appMode = 'quantum';
+            refreshGamificationUI();
+            let selectedQuestions = [...allSubQuestions].sort(() => 0.5 - Math.random()).slice(0, 25);
+            let allAnswersPool = allSubQuestions.map(item => item.a);
+
+            activeQuestions = selectedQuestions.map(item => {
+                let correctAnswer = item.a;
+                let wrongOptions = allAnswersPool.filter(ans => ans !== correctAnswer).sort(() => 0.5 - Math.random()).slice(0, 3);
+                let options = [...wrongOptions, correctAnswer].sort(() => 0.5 - Math.random());
+                return { q: "🌌 [محاكاة كمية من الجلسات]: " + item.q, correct: correctAnswer, options: options };
+            });
+
+            showScreen('quizScreen');
+            renderOracleQuestions(activeQuestions, `🌌 غرفة المحاكاة الكمية: (${subjectName}) - استخلاص ذكي من الجلسات`);
+            startOracleTimer(30 * 60);
+        }
+
+        function getAllSubjectQuestions(subjectName) {
+            let dbObj = getDatabaseObject(subjectName);
+            let list = [];
+            if(dbObj) {
+                if(subjectName.includes("مساحة ومنشآت زراعية")) {
+                    ['survey', 'structures'].forEach(branch => {
+                        if(dbObj[branch]) {
+                            Object.values(dbObj[branch]).forEach(arr => { list = list.concat(arr); });
+                        }
+                    });
+                } else if(dbObj.sessions) {
+                    Object.values(dbObj.sessions).forEach(arr => { list = list.concat(arr); });
+                }
+            }
+            return list;
+        }
+
+        function startExamTimer(durationInSeconds) {
+            if(examInterval) clearInterval(examInterval);
+            let timerContainer = document.getElementById('examTimerContainer');
+            let timeLeftSec = durationInSeconds;
+
+            examInterval = setInterval(() => {
+                let minutes = Math.floor(timeLeftSec / 60);
+                let seconds = timeLeftSec % 60;
+                timerContainer.innerHTML = `
+                    <div class="timer-badge">
+                        <span>⏳ الوقت المتبقي: ${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}</span>
+                        <button class="stop-timer-btn" onclick="stopExamTimer('simulator')">إنهاء الوقت ⏹️</button>
+                    </div>
+                `;
+                if(timeLeftSec <= 0) { clearInterval(examInterval); stopExamTimer('simulator'); }
+                timeLeftSec--;
+            }, 1000);
+        }
+
+        function stopExamTimer(type) {
+            if(examInterval) clearInterval(examInterval);
+            let totalQ = activeQuestions.length;
+            let correctCount = 0;
+            let wrongCount = 0;
+            let answeredCount = 0;
+
+            if (appMode === 'oracle' || appMode === 'quantum') {
+                let correctOptionsList = document.querySelectorAll('.mcq-option.correct[data-status="correct"]');
+                correctCount = correctOptionsList.length;
+                answeredCount = document.querySelectorAll('.question-card.answered').length;
+                wrongCount = answeredCount - correctCount;
+            } else {
+                let cards = document.querySelectorAll('.question-card');
+                cards.forEach((card, idx) => {
+                    let inputVal = card.querySelector('.exam-input').value.trim();
+                    let trueAns = activeQuestions[idx].a.trim();
+                    if(inputVal !== "") {
+                        answeredCount++;
+                        if(inputVal.toLowerCase() === trueAns.toLowerCase()) { correctCount++; } 
+                        else { wrongCount++; addWeakness(activeQuestions[idx].q, trueAns); }
+                    }
+                });
+            }
+
+            let percentage = totalQ > 0 ? Math.round((correctCount / totalQ) * 100) : 0;
+            let reportHtml = `
+                <div class="report-card">
+                    <h3>📊 التقرير التقيمي النهائي (بدون مجاملة)</h3>
+                    <div class="report-stats">
+                        <div class="stat-box"><span>إجمالي الأسئلة</span><strong>${totalQ}</strong></div>
+                        <div class="stat-box"><span>الإجابات الصحيحة</span><strong style="color: #10b981;">${correctCount}</strong></div>
+                        <div class="stat-box"><span>الإجابات الخاطئة</span><strong style="color: #ef4444;">${wrongCount}</strong></div>
+                    </div>
+                    <div style="font-size: 1.1rem; margin-bottom: 10px; color: #d1d5db;">
+                        نسبة النجاح الدقيقة: <strong style="color: ${percentage >= 50 ? '#10b981' : '#ef4444'};">${percentage}%</strong>
+                    </div>
+                    <p style="font-size: 0.95rem; color: #9ca3af; line-height: 1.5;">
+                        ${percentage >= 80 ? '🌟 أداء ممتاز ومستقر، حافظ على هذا النسق العالي!' : percentage >= 50 ? '⚠️ أداء مقبول ولكن يحتاج إلى مزيد من التركيز والمراجعة الجدية للجلسات.' : '❌ النتيجة ضعيفة للغاية! تم رصد أخطائك في قسم "صيد الثغرات" للمراجعة.'}
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('examTimerContainer').innerHTML = reportHtml;
+            document.getElementById('submitExamBtn').style.display = 'none';
+            let answerBoxes = document.querySelectorAll('.exam-answer-box');
+            answerBoxes.forEach(box => { box.style.display = 'block'; });
+
+            if(appMode === 'oracle' || appMode === 'quantum') {
+                let cards = document.querySelectorAll('.question-card');
+                cards.forEach(card => {
+                    let opts = card.querySelectorAll('.mcq-option');
+                    opts.forEach(opt => { if(opt.classList.contains('correct')) { opt.style.border = "2px solid #f59e0b"; } });
+                });
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderExamModeQuestions(questions, titleText) {
+            document.getElementById('quizTitle').innerText = titleText;
+            document.getElementById('submitExamBtn').style.display = 'block';
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="question-header"><span>🖤 السؤال ${index + 1} 🖤</span><div class="action-btns"><button class="icon-btn" onclick="speakText('', this)" title="قراءة السؤال صوتياً">🔊</button></div></div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">${item.q}</p>
+                    <input type="text" class="exam-input" placeholder="✍️ اكتب إجابتك هنا...">
+                    <div class="answer-box exam-answer-box" style="margin-top: 10px; border-right: 3px solid #10b981;"><strong>✅ الجواب الصحيح والحقيقي:</strong> ${item.a}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function submitExam() { stopExamTimer('simulator'); }
+
+        function renderQuestions(questions, titleText, isCompass = false) {
+            document.getElementById('quizTitle').innerText = titleText;
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            if(questions.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#9ca3af;">لا توجد أسئلة متاحة لهذه الجلسة أو القسم حتى الآن. ترقبوا الإضافة قريباً 🌹</p>';
+                return;
+            }
+
+            questions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                let isFav = favoriteQuestions.some(fav => fav.q === item.q);
+                let starColor = isFav ? 'gold' : 'white';
+
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span>🖤 ${index + 1} 🖤</span>
+                        <div class="action-btns">
+                            <button class="icon-btn" onclick="speakText('', this)" title="قراءة السؤال صوتياً">🔊</button>
+                            <button class="icon-btn" onclick="toggleFocus(this)" title="وضع التركيز">👁️</button>
+                            <button class="icon-btn" style="color: ${starColor};" onclick="toggleFavorite(this, '${encodeURIComponent(item.q)}', '${encodeURIComponent(item.a)}')" title="المفضلة">🌟</button>
+                        </div>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">${item.q}</p>
+                    <button class="show-ans-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">إظهار الجواب الصحيح 🌹</button>
+                    <div class="answer-box"><strong>الجواب:</strong> ${item.a}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterQuestions() {
+            let query = document.getElementById('searchBar').value.toLowerCase();
+            let cards = document.querySelectorAll('.question-card');
+            cards.forEach(card => {
+                let text = card.innerText.toLowerCase();
+                card.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function toggleFocus(btn) {
+            let card = btn.closest('.question-card');
+            let allCards = document.querySelectorAll('.question-card');
+            
+            if(card.classList.contains('focused-active')) {
+                allCards.forEach(c => { c.style.display = 'block'; });
+                card.classList.remove('focused-active');
+                card.style.position = 'relative'; card.style.top = 'auto'; card.style.left = 'auto'; card.style.transform = 'none'; card.style.width = '100%'; card.style.maxWidth = 'none'; card.style.zIndex = '1'; card.style.background = '#111827'; card.style.boxShadow = 'none';
+            } else {
+                allCards.forEach(c => { c.style.display = 'none'; });
+                card.classList.add('focused-active');
+                card.style.display = 'block'; card.style.position = 'fixed'; card.style.top = '50%'; card.style.left = '50%'; card.style.transform = 'translate(-50%, -50%)'; card.style.width = '90%'; card.style.maxWidth = '500px'; card.style.zIndex = '9999'; card.style.background = '#1f2937'; card.style.boxShadow = '0 0 25px rgba(0,0,0,0.9)';
+            }
+        }
+
+        function toggleFavorite(btn, qEncoded, aEncoded) {
+            let q = decodeURIComponent(qEncoded);
+            let a = decodeURIComponent(aEncoded);
+            let existingIndex = favoriteQuestions.findIndex(fav => fav.q === q);
+
+            if(existingIndex > -1) {
+                favoriteQuestions.splice(existingIndex, 1);
+                btn.style.color = 'white';
+                alert('تمت الإزالة من المفضلة 🌟');
+            } else {
+                favoriteQuestions.push({ q: q, a: a });
+                btn.style.color = 'gold';
+                alert('تم حفظ السؤال في المفضلة ليلة الامتحان 🌟⭐');
+            }
+            localStorage.setItem('albana_2nd_favorites', JSON.stringify(favoriteQuestions));
+        }
+
+        function showFavoritesScreen() {
+            showScreen('favoritesScreen');
+            const container = document.getElementById('favoritesContainer');
+            document.getElementById('favoritesTitle').innerText = '🌟 الأسئلة المفضلة والمحفوظة ليلة الامتحان';
+            container.innerHTML = '';
+
+            if(favoriteQuestions.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#9ca3af; margin-top:30px;">لم تقم بحفظ أي سؤال في المفضلة حتى الآن 🌟</p>';
+                return;
+            }
+
+            favoriteQuestions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span>🌟 المفضلة ${index + 1}</span>
+                        <div class="action-btns">
+                            <button class="icon-btn" onclick="speakText('', this)" title="قراءة السؤال صوتياً">🔊</button>
+                            <button class="icon-btn" onclick="toggleFocus(this)" title="وضع التركيز">👁️</button>
+                            <button class="icon-btn" style="color: gold;" onclick="removeFavorite(this, '${encodeURIComponent(item.q)}')" title="إزالة من المفضلة">❌</button>
+                        </div>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">${item.q}</p>
+                    <button class="show-ans-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">إظهار الجواب الصحيح 🌹</button>
+                    <div class="answer-box"><strong>الجواب:</strong> ${item.a}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeFavorite(btn, qEncoded) {
+            let q = decodeURIComponent(qEncoded);
+            favoriteQuestions = favoriteQuestions.filter(fav => fav.q !== q);
+            localStorage.setItem('albana_2nd_favorites', JSON.stringify(favoriteQuestions));
+            showFavoritesScreen();
+        }
+
+        function showWeaknessesScreen() {
+            showScreen('favoritesScreen');
+            const container = document.getElementById('favoritesContainer');
+            document.getElementById('favoritesTitle').innerText = '🎯 صيد الثغرات والأخطاء (أخطاؤك المرصودة)';
+            container.innerHTML = '';
+
+            if(weaknessQuestions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; margin-top:30px;">
+                        <p style="color:#10b981; font-size: 1.1rem; font-weight: bold; margin-bottom: 10px;">🎉 لا توجد ثغرات مسجلة حتى الآن!</p>
+                        <p style="color:#9ca3af; font-size: 0.95rem;">كل إجابة خاطئة تسجلها أثناء حل الاختبارات ستظهر هنا تلقائياً لمراجعتها.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let clearAllBtn = `<div style="margin-bottom: 15px; text-align: left;"><button onclick="clearAllWeaknesses()" style="background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem;">🧹 مسح كل الثغرات المرصودة</button></div>`;
+            container.innerHTML += clearAllBtn;
+
+            weaknessQuestions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="question-header">
+                        <span>🎯 ثغرة مرصودة ${index + 1}</span>
+                        <div class="action-btns">
+                            <button class="icon-btn" onclick="speakText('', this)" title="قراءة السؤال صوتياً">🔊</button>
+                            <button class="icon-btn" onclick="toggleFocus(this)" title="وضع التركيز">👁️</button>
+                            <button class="icon-btn" style="color: #ef4444;" onclick="removeWeakness(this, '${encodeURIComponent(item.q)}')" title="حذف هذه الثغرة بعد إتقانها">❌</button>
+                        </div>
+                    </div>
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">${item.q}</p>
+                    <button class="show-ans-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">إظهار الجواب الصحيح 🌹</button>
+                    <div class="answer-box"><strong>الجواب الصحيح:</strong> ${item.a}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeWeakness(btn, qEncoded) {
+            let q = decodeURIComponent(qEncoded);
+            weaknessQuestions = weaknessQuestions.filter(item => item.q !== q);
+            localStorage.setItem('albana_2nd_weaknesses', JSON.stringify(weaknessQuestions));
+            showWeaknessesScreen();
+        }
+
+        function clearAllWeaknesses() {
+            if(confirm('هل أنت متأكد من مسح جميع الثغرات المرصودة؟')) {
+                weaknessQuestions = [];
+                localStorage.removeItem('albana_2nd_weaknesses');
+                showWeaknessesScreen();
+            }
+        }
+
+        function showNotesScreen() {
+            showScreen('favoritesScreen');
+            const container = document.getElementById('favoritesContainer');
+            document.getElementById('favoritesTitle').innerText = '📝 مذكرة ملاحظات المهندس (السنة الثانية)';
+            let savedNotes = localStorage.getItem('albana_2nd_engineer_notes') || '';
+
+            let htmlContent = `
+                <div class="nav-buttons-bar">
+                    <button class="back-btn" onclick="showScreen('mainDashboard')">الرجوع للرئيسية</button>
+                    <button class="home-btn" onclick="saveEngineerNotes()">💾 حفظ الملاحظات</button>
+                </div>
+                <div class="question-card" style="padding: 20px;">
+                    <p style="color: #60a5fa; font-weight: bold; margin-bottom: 10px;">✍️ دون أفكارك، قوانينك، وملاحظاتك ليلة الامتحان هنا:</p>
+                    <textarea id="engineerNotesArea" style="width: 100%; height: 300px; background: #1f2937; border: 1px solid #4b5563; border-radius: 8px; color: #fff; padding: 15px; font-size: 1.05rem; line-height: 1.6; resize: vertical; outline: none;" placeholder="اكتب ملاحظاتك هنا... سيتم حفظها محلياً على جهازك تلقائياً 🖤🌹">${savedNotes}</textarea>
+                    <button onclick="saveEngineerNotes()" class="sub-box" style="background: #10b981; margin-top: 15px;">حفظ الملاحظات بنجاح 💾</button>
+                </div>
+            `;
+            container.innerHTML = htmlContent;
+        }
+
+        function saveEngineerNotes() {
+            let notesText = document.getElementById('engineerNotesArea').value;
+            localStorage.setItem('albana_2nd_engineer_notes', notesText);
+            alert('تم حفظ ملاحظاتك بنجاح يا GOAT 🖤🌹');
+        }
+    </script>
+</body>
+</html>
