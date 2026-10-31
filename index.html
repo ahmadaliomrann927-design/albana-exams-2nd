@@ -246,7 +246,7 @@
     </footer>
 
     <!-- ربط ملفات بنك الأسئلة الخاصة بمواد السنة الثانية مع تحديث الإصدار لإجبار المتصفح على السحب الفوري -->
-    <script src="genetics.js?v=1.1"></script>
+    <script src="genetics.js?v=1.2"></script>
     <script src="survey_structures.js?v=1.1"></script>
     <script src="insects.js?v=1.1"></script>
     <script src="biochemistry.js?v=1.1"></script>
@@ -538,7 +538,7 @@
             const container = document.getElementById('sessionsList');
             container.innerHTML = `<h3 style="color:#60a5fa; margin-bottom:15px; text-align:center;">${subjectName} (القسم العملي)</h3>`;
 
-            for(let i = 1; i <= 7; i++) {
+            for(let i = 1; i <= 5; i++) {
                 const div = document.createElement('div');
                 div.className = 'sub-box';
                 div.innerText = `الجلسة العملية ${getArabicNumber(i)}: ${subjectName}`;
